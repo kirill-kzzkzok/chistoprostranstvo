@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="title desc">
+  <title id="title">Чистый Срез</title>
+  <desc id="desc">Графический знак клининговой компании: чистый срез и лист</desc>
+  <rect width="48" height="48" rx="12" fill="#9fbea8"/>
+  <path d="M13 30.5 27.5 16a7.2 7.2 0 0 1 10.2 0l-1.8 1.8a4.7 4.7 0 0 0-6.6 0L14.8 32.3Z" fill="#1f2b24"/>
+  <path d="M12 35.2h24" stroke="#f4f5f3" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M29.2 13.2c2.8-4.2 7.3-4.6 9.4-4.4-.2 2.4-1.2 6.2-5.4 7.9" fill="none" stroke="#f4f5f3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
