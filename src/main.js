@@ -1,8 +1,8 @@
 // ============================================================================
-// ЧистоПространство - Main JavaScript
+// ЧистоПространство — главная логика страницы
 // ============================================================================
 
-// Service details data
+// Описания услуг для панели «serviceDetail»
 const serviceDetails = {
   regular: {
     title: "Регулярная уборка",
@@ -36,7 +36,8 @@ const serviceDetails = {
   },
 };
 
-// Calculator pricing logic
+// Тарифы калькулятора: ₽ за м² в зависимости от типа объекта и типа уборки.
+// Ставка по умолчанию — 42 ₽/м² (квартира, регулярная уборка).
 const pricingRates = {
   apartment: {
     regular: 42,
@@ -56,7 +57,7 @@ const pricingRates = {
 };
 
 // ============================================================================
-// Utility Functions
+// Утилиты
 // ============================================================================
 
 let toastTimeout;
@@ -94,7 +95,7 @@ function smoothScroll(target) {
 }
 
 // ============================================================================
-// Promo Float
+// Плавающий промо-блок
 // ============================================================================
 
 function initPromoFloat() {
@@ -104,25 +105,21 @@ function initPromoFloat() {
   const dismissButtons = promo.querySelectorAll("[data-dismiss-promo]");
 
   dismissButtons.forEach((button) => {
-    button.addEventListener("click", (e) => {
-      if (button.tagName === "A") {
-        // Let anchor navigation happen
-      }
+    button.addEventListener("click", () => {
+      // Ссылка-CTA продолжает работать как обычный якорь на #calculator.
       promo.classList.add("hide");
-
-      // Store dismissal in sessionStorage
       sessionStorage.setItem("promoDismissed", "true");
     });
   });
 
-  // Check if already dismissed
+  // Уже скрыт в этой сессии
   if (sessionStorage.getItem("promoDismissed") === "true") {
     promo.classList.add("hide");
   }
 }
 
 // ============================================================================
-// Mobile Navigation
+// Мобильная навигация
 // ============================================================================
 
 function initMobileNav() {
@@ -142,15 +139,11 @@ function initMobileNav() {
     );
     navMenu.classList.toggle("is-open", nextExpanded);
 
-    // Prevent body scroll when menu is open
-    if (!isExpanded) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    // Блокируем прокрутку страницы, пока меню открыто
+    document.body.style.overflow = nextExpanded ? "hidden" : "";
   });
 
-  // Close menu when clicking on a link
+  // Закрываем меню при клике по ссылке
   navLinks?.forEach((link) => {
     link.addEventListener("click", (e) => {
       e.preventDefault();
@@ -161,14 +154,14 @@ function initMobileNav() {
       navMenu.classList.remove("is-open");
       document.body.style.overflow = "";
 
-      // Small delay for smooth close animation
+      // Небольшая пауза, чтобы успела отыграть анимация закрытия меню
       setTimeout(() => {
         smoothScroll(target);
       }, 100);
     });
   });
 
-  // Close menu on escape key
+  // Закрытие меню по Escape
   document.addEventListener("keydown", (e) => {
     if (
       e.key === "Escape" &&
@@ -184,7 +177,7 @@ function initMobileNav() {
 }
 
 // ============================================================================
-// Smooth Anchor Scrolling
+// Плавный скролл по якорям
 // ============================================================================
 
 function initSmoothAnchors() {
@@ -192,7 +185,7 @@ function initSmoothAnchors() {
     anchor.addEventListener("click", function (e) {
       const href = this.getAttribute("href");
 
-      // Skip if it's just "#" or if menu is handling it
+      // "#" и ссылки меню обрабатываются отдельно
       if (href === "#" || this.classList.contains("nav-menu__link")) {
         return;
       }
@@ -204,7 +197,7 @@ function initSmoothAnchors() {
 }
 
 // ============================================================================
-// Services Interaction
+// Блок услуг
 // ============================================================================
 
 function initServices() {
@@ -215,20 +208,20 @@ function initServices() {
 
   serviceButtons.forEach((button) => {
     button.addEventListener("click", (event) => {
-      // The trailing arrow is an explicit shortcut to the order calculator.
-      // Keep the row itself as the service selector.
+      // Стрелка в строке услуги — явный переход к калькулятору,
+      // сама строка остаётся переключателем услуг.
       if (event.target.closest?.(".service-item__icon")) {
         event.preventDefault();
         smoothScroll("#calculator");
         return;
       }
-      // Remove active state from all buttons
+      // Снимаем выделение со всех строк услуг
       serviceButtons.forEach((btn) => btn.classList.remove("active"));
 
-      // Add active state to clicked button
+      // Подсвечиваем выбранную строку
       button.classList.add("active");
 
-      // Get service data
+      // Данные выбранной услуги
       const serviceKey = button.getAttribute("data-service");
       const service = serviceDetails[serviceKey];
 
@@ -241,14 +234,14 @@ function initServices() {
     });
   });
 
-  // Activate first service by default
+  // По умолчанию выбираем первую услугу
   if (serviceButtons.length > 0) {
     serviceButtons[0].click();
   }
 }
 
 // ============================================================================
-// Calculator
+// Калькулятор стоимости
 // ============================================================================
 
 function initCalculator() {
@@ -268,11 +261,11 @@ function initCalculator() {
     const areaValue = parseInt(area?.value || "75");
     const cleaning = cleaningType?.value || "regular";
 
-    // Base price calculation
+    // База: площадь × тариф (₽/м² для выбранного объекта и типа уборки)
     const rate = pricingRates[object]?.[cleaning] || 42;
-    let basePrice = areaValue * rate;
+    const basePrice = areaValue * rate;
 
-    // Add extras
+    // Допуслуги: фиксированные суммы из value-атрибутов чекбоксов
     let extrasPrice = 0;
     checkboxes.forEach((checkbox) => {
       if (checkbox.checked) {
@@ -282,18 +275,18 @@ function initCalculator() {
 
     const total = basePrice + extrasPrice;
 
-    // Update display
+    // Обновляем итоговую сумму
     if (totalElement) {
       totalElement.textContent = `от ${total.toLocaleString("ru-RU")} ₽`;
     }
 
-    // Update area output
+    // Обновляем подпись площади
     if (areaOutput && area) {
       areaOutput.textContent = `${area.value} м²`;
     }
   }
 
-  // Listen to all input changes
+  // Пересчёт по любому изменению полей формы
   objectType?.addEventListener("change", calculatePrice);
   area?.addEventListener("input", calculatePrice);
   cleaningType?.addEventListener("change", calculatePrice);
@@ -301,17 +294,17 @@ function initCalculator() {
     checkbox.addEventListener("change", calculatePrice);
   });
 
-  // Initial calculation
+  // Первичный расчёт при загрузке
   calculatePrice();
 
-  // Form submission
+  // Отправка формы
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     if (isSubmitting) return;
     isSubmitting = true;
     showToast("Демо-форма: данные не отправляются.", 4000);
 
-    // Scroll to contact form or show success
+    // После показа тоста ведём пользователя к контактной форме
     setTimeout(() => {
       smoothScroll("#contact");
       isSubmitting = false;
@@ -320,7 +313,7 @@ function initCalculator() {
 }
 
 // ============================================================================
-// Before/After Comparison Slider
+// Слайдер «до/после»
 // ============================================================================
 
 function initComparison() {
@@ -345,7 +338,7 @@ function initComparison() {
       divider.setAttribute("aria-valuenow", Math.round(clampedPosition));
     }
 
-    // Mouse events
+    // Мышь
     divider.addEventListener("mousedown", (e) => {
       isDragging = true;
       e.preventDefault();
@@ -360,7 +353,7 @@ function initComparison() {
       isDragging = false;
     });
 
-    // Touch events
+    // Тач-события
     divider.addEventListener("touchstart", (e) => {
       isDragging = true;
       e.preventDefault();
@@ -381,13 +374,13 @@ function initComparison() {
       isDragging = false;
     });
 
-    // Click to position
+    // Клик по контейнеру перемещает разделитель
     container.addEventListener("click", (e) => {
       if (e.target === divider || divider.contains(e.target)) return;
       updatePosition(e.clientX);
     });
 
-    // Keyboard navigation
+    // Клавиатура
     divider.addEventListener("keydown", (e) => {
       const currentLeft = parseFloat(divider.style.left) || 50;
       let newLeft = currentLeft;
@@ -408,7 +401,7 @@ function initComparison() {
 }
 
 // ============================================================================
-// FAQ Accordion
+// Аккордеон FAQ
 // ============================================================================
 
 function initFAQ() {
@@ -418,7 +411,7 @@ function initFAQ() {
     const summary = item.querySelector("summary");
 
     summary?.addEventListener("click", (e) => {
-      // Close other items (one open at a time)
+      // Закрываем остальные вопросы — открытым остаётся только один
       const wasOpen = item.hasAttribute("open");
 
       faqItems.forEach((otherItem) => {
@@ -427,7 +420,7 @@ function initFAQ() {
         }
       });
 
-      // If it was already open and we just closed it, prevent reopening
+      // Если вопрос был открыт — закрываем его и не даём тут же открыться снова
       if (wasOpen) {
         e.preventDefault();
         item.removeAttribute("open");
@@ -437,7 +430,7 @@ function initFAQ() {
 }
 
 // ============================================================================
-// Contact Form
+// Форма заявки
 // ============================================================================
 
 function initContactForm() {
@@ -461,10 +454,10 @@ function initContactForm() {
 
     showToast("Демо-форма: данные не отправляются.", 4000);
 
-    // Reset form
+    // Сбрасываем форму
     form.reset();
 
-    // Prevent accidental double-click submissions while feedback is visible.
+    // Гасим случайный даблклик, пока виден тост с подтверждением.
     setTimeout(() => {
       isSubmitting = false;
     }, 1000);
@@ -472,36 +465,7 @@ function initContactForm() {
 }
 
 // ============================================================================
-// Scroll Reveal Animations
-// ============================================================================
-
-function initScrollReveal() {
-  const reveals = document.querySelectorAll(".reveal");
-
-  if (!reveals.length) return;
-
-  const observerOptions = {
-    threshold: 0.1,
-    rootMargin: "0px 0px -50px 0px",
-  };
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("revealed");
-        // Stop observing after reveal (performance)
-        observer.unobserve(entry.target);
-      }
-    });
-  }, observerOptions);
-
-  reveals.forEach((reveal) => {
-    observer.observe(reveal);
-  });
-}
-
-// ============================================================================
-// Sticky Header with Hide on Scroll
+// Липкая шапка, скрывающаяся при скролле
 // ============================================================================
 
 function initStickyHeader() {
@@ -516,7 +480,8 @@ function initStickyHeader() {
       window.requestAnimationFrame(() => {
         const currentScroll = window.pageYOffset;
 
-        // Hide header on scroll down, show on scroll up - with threshold to prevent flicker
+        // Скролл вниз — прячем шапку, вверх — показываем.
+        // Порог в 5px отсекает дрожание от микроскроллов.
         if (
           currentScroll > lastScroll &&
           currentScroll > 150 &&
@@ -530,7 +495,7 @@ function initStickyHeader() {
           header.classList.remove("hidden");
         }
 
-        // Add shadow when scrolled
+        // Тень появляется после первых 100px прокрутки
         if (currentScroll > 100) {
           header.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.05)";
         } else {
@@ -547,30 +512,12 @@ function initStickyHeader() {
 }
 
 // ============================================================================
-// Marquee Duplication (for seamless loop)
-// ============================================================================
-
-function initMarquee() {
-  const tracks = document.querySelectorAll(".marquee__track");
-  // The markup already contains a complete second copy for the seamless
-  // loop. Duplicating it again here made the content appear four times and
-  // changed the intended animation cadence.
-  tracks.forEach((track) => (track.dataset.marqueeReady = "true"));
-}
-
-// ============================================================================
-// Image Loading Optimization
+// Оптимизация загрузки изображений
 // ============================================================================
 
 function initLazyLoading() {
-  if ("loading" in HTMLImageElement.prototype) {
-    // Native lazy loading is supported
-    const images = document.querySelectorAll('img[loading="lazy"]');
-    images.forEach((img) => {
-      img.src = img.src; // Trigger loading
-    });
-  } else {
-    // Fallback for older browsers
+  if (!("loading" in HTMLImageElement.prototype)) {
+    // Fallback для браузеров без нативного loading="lazy"
     const script = document.createElement("script");
     script.src =
       "https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js";
@@ -579,74 +526,7 @@ function initLazyLoading() {
 }
 
 // ============================================================================
-// Statistics Counter Animation
-// ============================================================================
-
-function initCounters() {
-  const counters = document.querySelectorAll("[data-count]");
-
-  if (!counters.length) return;
-
-  const observerOptions = {
-    threshold: 0.5,
-    rootMargin: "0px",
-  };
-
-  const animateCounter = (element) => {
-    const target = element.getAttribute("data-count");
-    const isDecimal = target.includes(".");
-    const isFraction = target.includes("/");
-
-    if (isFraction) {
-      // Don't animate fractions like "4,9/5"
-      element.textContent = target;
-      return;
-    }
-
-    if (isDecimal) {
-      // Don't animate decimals like "4,9"
-      element.textContent = target;
-      return;
-    }
-
-    const endValue = parseInt(target.replace(/\D/g, ""));
-    const duration = 2000;
-    const increment = endValue / (duration / 16);
-    let current = 0;
-
-    const updateCounter = () => {
-      current += increment;
-
-      if (current < endValue) {
-        element.textContent = Math.floor(current).toLocaleString("ru-RU");
-        requestAnimationFrame(updateCounter);
-      } else {
-        element.textContent =
-          endValue.toLocaleString("ru-RU") +
-          (target.includes("+") ? "+" : "") +
-          (target.includes("%") ? "%" : "");
-      }
-    };
-
-    updateCounter();
-  };
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        animateCounter(entry.target);
-        observer.unobserve(entry.target);
-      }
-    });
-  }, observerOptions);
-
-  counters.forEach((counter) => {
-    observer.observe(counter);
-  });
-}
-
-// ============================================================================
-// Rotating Text Animation
+// Ротация слов в заголовке
 // ============================================================================
 
 function initRotatingText() {
@@ -679,7 +559,7 @@ function initRotatingText() {
 }
 
 // ============================================================================
-// Scroll Fade Animations
+// Появление секций при скролле
 // ============================================================================
 
 function initScrollFade() {
@@ -699,8 +579,8 @@ function initScrollFade() {
       if (entry.isIntersecting) {
         entry.target.classList.add("visible");
       } else {
-        // Reset the state after leaving the viewport so the reveal plays
-        // again on the next scroll pass, preserving the existing animation.
+        // Сбрасываем состояние при выходе из вьюпорта,
+        // чтобы анимация повторялась при каждом новом проходе.
         entry.target.classList.remove("visible");
       }
     });
@@ -713,49 +593,34 @@ function initScrollFade() {
 }
 
 // ============================================================================
-// Initialize Everything
+// Инициализация
 // ============================================================================
 
 function init() {
-  // Core functionality
+  // Базовая функциональность
   initPromoFloat();
   initMobileNav();
   initSmoothAnchors();
 
-  // Interactive sections
+  // Интерактивные секции
   initServices();
   initCalculator();
   initComparison();
   initFAQ();
   initContactForm();
 
-  // Visual enhancements
-  initScrollReveal();
+  // Визуальные эффекты
   initStickyHeader();
-  initMarquee();
-  initCounters();
   initRotatingText();
   initScrollFade();
 
-  // Performance
+  // Производительность
   initLazyLoading();
 }
 
-// Run when DOM is ready
+// Запуск после готовности DOM
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", init);
 } else {
   init();
 }
-
-// Handle page visibility for animations
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) {
-    // Pause animations if needed
-  } else {
-    // Resume animations if needed
-  }
-});
-
-// Export for module usage
-export { showToast, smoothScroll, initCalculator, initComparison };
